@@ -1,0 +1,10 @@
+<launch>
+  <env name="ROSCONSOLE_CONFIG_FILE"
+       value="$(find fetch_open_auto_dock)/custom_rosconsole.conf"/>
+  <node name="auto_dock" pkg="fetch_open_auto_dock" type="auto_dock" output="screen" >
+	<remap from="cmd_vel" to="dock_command"/>
+	<remap from="base_scan" to="scan_frontHokuyo"/>
+	<param name="debug" value="true"/>
+	
+  </node>
+</launch>

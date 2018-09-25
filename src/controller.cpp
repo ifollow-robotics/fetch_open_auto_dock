@@ -39,6 +39,8 @@ BaseController::BaseController(ros::NodeHandle& nh)
   max_angular_velocity_ = 2.0;
   beta_ = 0.2;
   lambda_ = 2.0;
+
+  ready_=false; 
 }
 
 bool BaseController::approach(const geometry_msgs::PoseStamped& target)
@@ -64,11 +66,11 @@ bool BaseController::approach(const geometry_msgs::PoseStamped& target)
   try
   {
     pose.header.stamp = ros::Time(0);
-    listener_.transformPose("base_link", pose, pose);
+    listener_.transformPose("cart_body", pose, pose);
   }
   catch (tf::TransformException const &ex)
   {
-    ROS_WARN_STREAM_THROTTLE(1.0, "Couldn't get transform from dock to base_link");
+    ROS_WARN_STREAM_THROTTLE(1.0, "Couldn't get transform from dock to cart_body");
     stop();
     return false;
   }
@@ -138,10 +140,10 @@ bool BaseController::approach(const geometry_msgs::PoseStamped& target)
   // Create debugging view of path
   nav_msgs::Path plan;
   plan.header.stamp = ros::Time::now();
-  plan.header.frame_id = "base_link";
+  plan.header.frame_id = "cart_body";
   // Add origin
   geometry_msgs::PoseStamped path_pose;
-  path_pose.header.frame_id = "base_link";
+  path_pose.header.frame_id = "cart_body";
   path_pose.pose.orientation.w = 1.0;
   plan.poses.push_back(path_pose);
   double yaw = 0.0;
@@ -183,9 +185,8 @@ bool BaseController::backup(double distance, double rotate_distance)
 
   // Get current base pose in odom
   geometry_msgs::PoseStamped pose;
-  pose.header.frame_id = "base_link";
+  pose.header.frame_id = "cart_body";
   pose.pose.orientation.w = 1.0;
-
   try
   {
     listener_.waitForTransform("odom",
@@ -196,11 +197,12 @@ bool BaseController::backup(double distance, double rotate_distance)
   }
   catch (tf::TransformException const &ex)
   {
-    ROS_WARN_STREAM_THROTTLE(1.0, "Couldn't get transform from base_link to odom");
+    ROS_WARN_STREAM_THROTTLE(1.0, "Couldn't get transform from cart_body to odom");
     stop();
     return false;
   }
 
+  //ROS_INFO("22 ; w : %f, x : %f, y : %f, z : %f", pose.pose.orientation.w, pose.pose.orientation.x, pose.pose.orientation.y, pose.pose.orientation.z);
   // If just getting started, stow starting pose
   if (!ready_)
   {
@@ -214,6 +216,7 @@ bool BaseController::backup(double distance, double rotate_distance)
     // Get yaw angles
     tf::Quaternion q1, q2;
     tf::quaternionMsgToTF(start_.pose.orientation, q1);
+  //ROS_INFO("32 ; w : %f, x : %f, y : %f, z : %f", start_.pose.orientation.w, start_.pose.orientation.x, start_.pose.orientation.y, start_.pose.orientation.z);
     tf::quaternionMsgToTF(pose.pose.orientation, q2);
     double theta = angles::normalize_angle(tf::getYaw(q2) - tf::getYaw(q1));
     double error = angles::normalize_angle(rotate_distance - theta);

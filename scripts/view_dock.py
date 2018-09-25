@@ -33,7 +33,7 @@ class ViewDock(object):
         # Publish forward simulation of where current command will take robot
         path = Path()
         path.header.stamp = msg.feedback.dock_pose.header.stamp
-        path.header.frame_id = "base_link"
+        path.header.frame_id = "cart_body"
         pose = PoseStamped()
         pose.header = path.header
         pose.pose.position.x = 0

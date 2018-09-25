@@ -59,7 +59,7 @@ struct DockCandidate
     }
 
     // Check overall size
-    if (width() > 0.5 || width() < 0.25)
+    if (width() > 0.3 || width() < 0.1)
       return false;
 
     // If dock is found, we want to avoid large jumps

@@ -51,6 +51,7 @@ AutoDocking::AutoDocking() :
                                                         boost::bind(&AutoDocking::stateCallback, this, _1));
 
   // Start action server thread
+  charging_=false;
   dock_.start();
   undock_.start();
 }
@@ -102,8 +103,8 @@ void AutoDocking::dockCallback(const fetch_auto_dock_msgs::DockGoalConstPtr& goa
   initDockTimeout();
 
   // Get initial dock pose.
-  geometry_msgs::PoseStamped dock_pose_base_link;
-  while (!perception_.getPose(dock_pose_base_link, "base_link"))
+  geometry_msgs::PoseStamped dock_pose_cart_body;
+  while (!perception_.getPose(dock_pose_cart_body, "cart_body"))
   {
     // Wait for perception to get its first pose estimate.
     if (!continueDocking(result))
@@ -115,20 +116,22 @@ void AutoDocking::dockCallback(const fetch_auto_dock_msgs::DockGoalConstPtr& goa
   }
 
   // Preorient the robot.
-  double dock_yaw = angles::normalize_angle(tf::getYaw(dock_pose_base_link.pose.orientation));
+  double dock_yaw = angles::normalize_angle(tf::getYaw(dock_pose_cart_body.pose.orientation));
   if (!std::isfinite(dock_yaw))
   {
+    //ROS_INFO("Dock yaw is invalid : yaw=%f, normalized_yaw=%f", tf::getYaw(dock_pose_cart_body.pose.orientation), angles::normalize_angle(tf::getYaw(dock_pose_cart_body.pose.orientation)));
     ROS_ERROR_STREAM_NAMED("auto_dock", "Dock yaw is invalid.");
     cancel_docking_ = true;
   }
   else if (ros::ok() && continueDocking(result))
   {
     // Set backup limit to be the initial dock range.
-    backup_limit_ = sqrt(pow(dock_pose_base_link.pose.position.x, 2) + pow(dock_pose_base_link.pose.position.y, 2));
+    backup_limit_ = sqrt(pow(dock_pose_cart_body.pose.position.x, 2) + pow(dock_pose_cart_body.pose.position.y, 2));
     // Shorten up the range a bit.
     backup_limit_ *= 0.9;
 
     // Preorient the robot towards the dock.
+    //ROS_INFO("this is the yaw : %f", dock_yaw);
     while (!controller_.backup(0.0, -dock_yaw) && 
            continueDocking(result)             &&
            ros::ok()
@@ -232,12 +235,12 @@ bool AutoDocking::continueDocking(fetch_auto_dock_msgs::DockResult& result)
  */
 void AutoDocking::checkDockChargingConditions()
 {
-  // Grab the dock pose in the base_link so we can evaluate it wrt the robot.
-  geometry_msgs::PoseStamped dock_pose_base_link;
-  perception_.getPose(dock_pose_base_link, "base_link");
+  // Grab the dock pose in the cart_body so we can evaluate it wrt the robot.
+  geometry_msgs::PoseStamped dock_pose_cart_body;
+  perception_.getPose(dock_pose_cart_body, "cart_body");
 
   // Are we close enough to be docked?
-  if (dock_pose_base_link.pose.position.x < DOCKED_DISTANCE_THRESHOLD_)
+  if (dock_pose_cart_body.pose.position.x < DOCKED_DISTANCE_THRESHOLD_)
   {
     if (!charging_timeout_set_)
     {
@@ -355,19 +358,19 @@ double AutoDocking::backupDistance()
  */
 bool AutoDocking::isApproachBad(double & dock_yaw)
 {
-  // Grab the dock pose in the base_link so we can evaluate it wrt the robot.
-  geometry_msgs::PoseStamped dock_pose_base_link;
-  perception_.getPose(dock_pose_base_link, "base_link");
+  // Grab the dock pose in the cart_body so we can evaluate it wrt the robot.
+  geometry_msgs::PoseStamped dock_pose_cart_body;
+  perception_.getPose(dock_pose_cart_body, "cart_body");
 
-  dock_yaw = angles::normalize_angle(tf::getYaw(dock_pose_base_link.pose.orientation));
+  dock_yaw = angles::normalize_angle(tf::getYaw(dock_pose_cart_body.pose.orientation));
 
   // If we are close to the dock but not quite docked, check other approach parameters.
-  if (dock_pose_base_link.pose.position.x < abort_distance_ &&
-      dock_pose_base_link.pose.position.x > DOCKED_DISTANCE_THRESHOLD_
+  if (dock_pose_cart_body.pose.position.x < abort_distance_ &&
+      dock_pose_cart_body.pose.position.x > DOCKED_DISTANCE_THRESHOLD_
       )
   {
     // Check to see if we are too far side-to-side or at a bad angle.
-    if (fabs(dock_pose_base_link.pose.position.y)              > abort_threshold_ ||
+    if (fabs(dock_pose_cart_body.pose.position.y)              > abort_threshold_ ||
         fabs(dock_yaw)                                         > abort_angle_
        )
     {

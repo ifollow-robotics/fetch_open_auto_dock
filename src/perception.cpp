@@ -69,26 +69,29 @@ DockPerception::DockPerception(ros::NodeHandle& nh) :
   }
 
   // Create ideal cloud
-  // Front face is 300mm long
-  for (double y = -0.15; y <= 0.15; y += 0.001)
+  // Unclosed triangle with flat sides _/\_
+  // Each side is 115.45mm long, at 30 degree angle
+  for (double y = -0.1; y <0.1  /*0.0707106*/; y += 0.001)
+  {
+    geometry_msgs::Point p;
+    p.x =0.0577 - fabs(y)*tan(30*3.14/180);
+    p.y = y;
+    p.z = 0.0;
+    ideal_cloud_.push_back(p);
+    front_cloud_.push_back(p);
+  }
+
+  /*for (double y = 0.10; y <= 0.12; y += 0.001)
   {
     geometry_msgs::Point p;
     p.x = p.z = 0.0;
     p.y = y;
     ideal_cloud_.push_back(p);
     front_cloud_.push_back(p);
-  }
-  // Each side is 100mm long, at 45 degree angle
-  for (double x = 0.0; x < 0.05 /*0.0707106*/; x += 0.001)
-  {
-    geometry_msgs::Point p;
-    p.x = x;
-    p.y = 0.15 + x;
-    p.z = 0.0;
-    ideal_cloud_.push_back(p);
-    p.y = -0.15 - x;
+    p.y = -y;
     ideal_cloud_.insert(ideal_cloud_.begin(), p);
-  }
+    front_cloud_.insert(front_cloud_.begin(), p);
+  }*/
 
   // Debugging publishers first
   if (debug_)
@@ -122,14 +125,16 @@ bool DockPerception::getPose(geometry_msgs::PoseStamped& pose, std::string frame
   // All of this requires a lock on the dock_
   boost::mutex::scoped_lock lock(dock_mutex_);
 
-  if (!found_dock_)
+  if (!found_dock_){
+    ROS_INFO("no dock found -> return false");
     return false;
+  }
 
-  if (ros::Time::now() > dock_stamp_ + ros::Duration(0.35))
+  /*if (ros::Time::now() > dock_stamp_ + ros::Duration(0.35))
   {
     ROS_DEBUG_NAMED("dock_perception", "Dock pose timed out");
     return false;
-  }
+  }*/
 
   // Check for a valid orientation.
   tf::Quaternion q;
@@ -149,6 +154,7 @@ bool DockPerception::getPose(geometry_msgs::PoseStamped& pose, std::string frame
   }
 
   pose = dock_;
+  //ROS_INFO("given pose %f %f", dock_.pose.position.x, dock_.pose.orientation.w);
 
   if (frame != "")
   {
@@ -242,9 +248,11 @@ void DockPerception::callback(const sensor_msgs::LaserScanConstPtr& scan)
        i++)
   {
     DockCandidatePtr c = extract(*i);
+    //ROS_INFO("testing candidate ; width %f ; dist %f", c->width(), c->dist);
     if (c && c->valid(found_dock_))
     {
       candidates.push(c);
+      //ROS_INFO("candidate accepted");
     }
   }
   ROS_DEBUG_STREAM_NAMED("dock_perception", "Extracted " << candidates.size() << " clusters");
@@ -517,7 +525,7 @@ double DockPerception::fit(const DockCandidatePtr& candidate, geometry_msgs::Pos
 
     // If width of candidate is smaller than the width of dock
     // then the whole dock is not visible...
-    if (candidate->width() < 0.375)
+    if (candidate->width() < 0.1)
     {
       // ... and heading is unreliable when close to dock
       ROS_DEBUG_STREAM_NAMED("perception", "Dock candidate width is unreliable.");
