@@ -73,6 +73,7 @@ private:
   double lambda_;  // ??
   double dist_;  // used to create the tracking line
 
+  double robot_half_length_; //controller aims for robot-dock distance to 0
   /*
    * Parameters for backup controller
    */

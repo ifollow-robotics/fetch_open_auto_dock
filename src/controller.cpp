@@ -39,6 +39,8 @@ BaseController::BaseController(ros::NodeHandle& nh)
   max_angular_velocity_ = 2.0;
   beta_ = 0.2;
   lambda_ = 2.0;
+  dist_ = 0.4;
+  robot_half_length_ = 0.72;
 
   ready_=false; 
 }
@@ -77,7 +79,7 @@ bool BaseController::approach(const geometry_msgs::PoseStamped& target)
 
   // Distance to goal
   double r = std::sqrt(pose.pose.position.x * pose.pose.position.x +
-                       pose.pose.position.y * pose.pose.position.y);
+                       pose.pose.position.y * pose.pose.position.y) - robot_half_length_;
 
   // Once we get close, reduce d_
   if (r < 0.3)
