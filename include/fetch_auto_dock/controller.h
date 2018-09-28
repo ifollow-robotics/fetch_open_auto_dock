@@ -23,6 +23,7 @@
 #include <tf/transform_listener.h>
 #include <geometry_msgs/Twist.h>
 #include <nav_msgs/Path.h>
+#include <fstream>
 
 class BaseController
 {
@@ -74,6 +75,9 @@ private:
   double dist_;  // used to create the tracking line
 
   double robot_half_length_; //controller aims for robot-dock distance to 0
+  std::ofstream myfile;
+
+
   /*
    * Parameters for backup controller
    */

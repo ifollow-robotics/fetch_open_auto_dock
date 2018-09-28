@@ -36,11 +36,13 @@ BaseController::BaseController(ros::NodeHandle& nh)
   k2_ = 2;
   min_velocity_ = 0.15;
   max_velocity_ = 0.15;
-  max_angular_velocity_ = 2.0;
+  max_angular_velocity_ = 0.5;
   beta_ = 0.2;
   lambda_ = 2.0;
-  dist_ = 0.4;
+  dist_ = 0.72;
   robot_half_length_ = 0.72;
+
+  myfile.open ("/home/nuc/fetch.txt");
 
   ready_=false; 
 }
@@ -79,7 +81,9 @@ bool BaseController::approach(const geometry_msgs::PoseStamped& target)
 
   // Distance to goal
   double r = std::sqrt(pose.pose.position.x * pose.pose.position.x +
-                       pose.pose.position.y * pose.pose.position.y) - robot_half_length_;
+                       pose.pose.position.y * pose.pose.position.y);
+
+  ROS_INFO("Distance to goal is %f", r);
 
   // Once we get close, reduce d_
   if (r < 0.3)
@@ -135,6 +139,9 @@ bool BaseController::approach(const geometry_msgs::PoseStamped& target)
   }
 
   // Send command to base
+  ROS_INFO("delta : %f theta : %f a : %f k: %f v : %f bunded_w : %f", delta, theta, a,k,v,bounded_w);
+
+  this->myfile << "delta : "<<delta<<"  theta : "<< theta <<"  a : "<< a<<"  k : "<<k<<"  v : "<<v<<"  w : "<<w<<"\n";
   command_.linear.x = v;
   command_.angular.z = bounded_w;
   cmd_vel_pub_.publish(command_);
@@ -280,5 +287,5 @@ void BaseController::stop()
   ready_ = false;
 
   // Reset the approach controller
-  dist_ = 0.4;
+  dist_ = 0.72;
 }

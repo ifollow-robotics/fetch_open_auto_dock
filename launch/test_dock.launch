@@ -5,6 +5,7 @@
 	<remap from="cmd_vel" to="dock_command"/>
 	<remap from="base_scan" to="scan_frontHokuyo"/>
 	<param name="debug" value="true"/>
+	<param name="docked_distance_threshold" value="0.75"/>
 	
   </node>
 </launch>

@@ -126,7 +126,7 @@ bool DockPerception::getPose(geometry_msgs::PoseStamped& pose, std::string frame
   boost::mutex::scoped_lock lock(dock_mutex_);
 
   if (!found_dock_){
-    ROS_INFO("no dock found -> return false");
+    //ROS_INFO("no dock found -> return false");
     return false;
   }
 
