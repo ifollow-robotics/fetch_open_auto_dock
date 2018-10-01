@@ -39,7 +39,7 @@ BaseController::BaseController(ros::NodeHandle& nh)
   max_angular_velocity_ = 0.5;
   beta_ = 0.2;
   lambda_ = 2.0;
-  dist_ = 0.4;
+  dist_ = 0.0;
   robot_half_length_ = 0.72;
 
   myfile.open ("/home/nuc/fetch.txt");
@@ -121,7 +121,7 @@ bool BaseController::approach(const geometry_msgs::PoseStamped& target)
   // Compute the virtual control
   double a = atan(-k1_ * theta);
   // Compute curvature (k)
-  double k = -1.0/r * (k2_ * (delta - a) + (1 + (k1_/1+((k1_*theta)*(k1_*theta))))*sin(delta));
+  double k = -1.0/r * (k2_ * (delta - a) + (1 + (k1_/(1+(k1_*theta)*(k1_*theta))))*sin(delta));
 
   // Compute max_velocity based on curvature
   double v = max_velocity_ / (1 + beta_ * std::pow(fabs(k), lambda_));
@@ -294,5 +294,5 @@ void BaseController::stop()
   ready_ = false;
 
   // Reset the approach controller
-  dist_ = 0.4;
+  dist_ = 0.0;
 }
