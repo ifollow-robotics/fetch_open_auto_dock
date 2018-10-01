@@ -39,7 +39,7 @@ BaseController::BaseController(ros::NodeHandle& nh)
   max_angular_velocity_ = 0.5;
   beta_ = 0.2;
   lambda_ = 2.0;
-  dist_ = 0.72;
+  dist_ = 0.4;
   robot_half_length_ = 0.72;
 
   myfile.open ("/home/nuc/fetch.txt");
@@ -49,23 +49,11 @@ BaseController::BaseController(ros::NodeHandle& nh)
 
 bool BaseController::approach(const geometry_msgs::PoseStamped& target)
 {
+   ROS_INFO("incoming target pose %f %f", target.pose.position.x, target.pose.position.y);
   // Transform pose by -dist_ in the X direction of the dock
   geometry_msgs::PoseStamped pose = target;
-  {
-    tf::Quaternion q;
-    tf::quaternionMsgToTF(pose.pose.orientation, q);
-    double theta = angles::normalize_angle(tf::getYaw(q));
-    // If the target has an invalid orientation then don't approach it.
-    if (!std::isfinite(theta))
-    {
-      ROS_ERROR_STREAM_NAMED("controller", "Invalid approach target for docking.");
-      stop();
-      return true;
-    }
-    pose.pose.position.x += cos(theta) * -dist_;
-    pose.pose.position.y += sin(theta) * -dist_;
-  }
 
+   ROS_INFO("mystery frame is %s", pose.header.frame_id.c_str());
   // Transform target into base frame
   try
   {
@@ -78,7 +66,26 @@ bool BaseController::approach(const geometry_msgs::PoseStamped& target)
     stop();
     return false;
   }
+   
+  ROS_INFO("after tf %f %f", pose.pose.position.x, pose.pose.position.y);
 
+  {
+    tf::Quaternion q;
+    tf::quaternionMsgToTF(pose.pose.orientation, q);
+    double theta = angles::normalize_angle(tf::getYaw(q));
+    // If the target has an invalid orientation then don't approach it.
+    if (!std::isfinite(theta))
+    {
+      ROS_ERROR_STREAM_NAMED("controller", "Invalid approach target for docking.");
+      stop();
+      return true;
+    }
+    pose.pose.position.x += cos(theta) * (-dist_ - robot_half_length_);
+    pose.pose.position.y += sin(theta) * (-dist_ - robot_half_length_);
+  }
+   
+  ROS_INFO("after theta dist shift pose %f %f", pose.pose.position.x, pose.pose.position.y);
+  
   // Distance to goal
   double r = std::sqrt(pose.pose.position.x * pose.pose.position.x +
                        pose.pose.position.y * pose.pose.position.y);
@@ -97,7 +104,7 @@ bool BaseController::approach(const geometry_msgs::PoseStamped& target)
   }
 
   // If within distance tolerance, return true
-  if (r < 0.01)
+  if (r < 0.05)
   {
     // stop();
     return true;
@@ -139,9 +146,9 @@ bool BaseController::approach(const geometry_msgs::PoseStamped& target)
   }
 
   // Send command to base
-  ROS_INFO("delta : %f theta : %f a : %f k: %f v : %f bunded_w : %f", delta, theta, a,k,v,bounded_w);
+  ROS_INFO("delta : %f theta : %f r : %f k: %f v : %f bunded_w : %f a : %f", delta, theta, r,k,v,bounded_w,a);
 
-  this->myfile << "delta : "<<delta<<"  theta : "<< theta <<"  a : "<< a<<"  k : "<<k<<"  v : "<<v<<"  w : "<<w<<"\n";
+  this->myfile << "delta : "<<delta<<"  theta : "<< theta <<"  r : "<< r<<"  k : "<<k<<"  v : "<<v<<"  w : "<<w<<"  a : "<<a<<"\n";
   command_.linear.x = v;
   command_.angular.z = bounded_w;
   cmd_vel_pub_.publish(command_);
@@ -287,5 +294,5 @@ void BaseController::stop()
   ready_ = false;
 
   // Reset the approach controller
-  dist_ = 0.72;
+  dist_ = 0.4;
 }

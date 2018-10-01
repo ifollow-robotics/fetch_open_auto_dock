@@ -130,11 +130,11 @@ bool DockPerception::getPose(geometry_msgs::PoseStamped& pose, std::string frame
     return false;
   }
 
-  /*if (ros::Time::now() > dock_stamp_ + ros::Duration(0.35))
+  if (ros::Time::now() > dock_stamp_ + ros::Duration(0.35))
   {
     ROS_DEBUG_NAMED("dock_perception", "Dock pose timed out");
     return false;
-  }*/
+  }
 
   // Check for a valid orientation.
   tf::Quaternion q;
