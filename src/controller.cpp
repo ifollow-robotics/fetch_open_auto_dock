@@ -30,16 +30,17 @@ BaseController::BaseController(ros::NodeHandle& nh)
   // Create publishers
   path_pub_ = nh.advertise<nav_msgs::Path>("path", 10);
   cmd_vel_pub_ = nh.advertise<geometry_msgs::Twist>("cmd_vel", 10);
+  dock_pub_ = nh.advertise<geometry_msgs::PoseStamped>("/dock_pose/debug", 1);
 
   // TODO(enhancement): these should be loaded from ROS params
-  k1_ = 3;
-  k2_ = 2;
+  k1_ = 1;
+  k2_ = 3;
   min_velocity_ = 0.15;
   max_velocity_ = 0.15;
   max_angular_velocity_ = 0.5;
   beta_ = 0.2;
   lambda_ = 2.0;
-  dist_ = 0.0;
+  dist_ = 0.4;
   robot_half_length_ = 0.72;
 
   myfile.open ("/home/nuc/fetch.txt");
@@ -84,6 +85,7 @@ bool BaseController::approach(const geometry_msgs::PoseStamped& target)
     pose.pose.position.y += sin(theta) * (-dist_ - robot_half_length_);
   }
    
+  dock_pub_.publish(pose);
   ROS_INFO("after theta dist shift pose %f %f", pose.pose.position.x, pose.pose.position.y);
   
   // Distance to goal
@@ -106,7 +108,7 @@ bool BaseController::approach(const geometry_msgs::PoseStamped& target)
   // If within distance tolerance, return true
   if (r < 0.05)
   {
-    // stop();
+    stop();
     return true;
   }
 
@@ -294,5 +296,5 @@ void BaseController::stop()
   ready_ = false;
 
   // Reset the approach controller
-  dist_ = 0.0;
+  //dist_ = 0.4;
 }

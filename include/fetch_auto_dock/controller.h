@@ -58,6 +58,7 @@ public:
 private:
   ros::Publisher cmd_vel_pub_;  // Publisher of commands
   ros::Publisher path_pub_;  // Publisher of paths
+  ros::Publisher dock_pub_;  // Publisher of input dock pose
 
   tf::TransformListener listener_;
   geometry_msgs::Twist command_;
