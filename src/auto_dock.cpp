@@ -38,8 +38,8 @@ AutoDocking::AutoDocking() :
 {
   // Load ros parameters
   ros::NodeHandle pnh("~");
-  pnh.param("abort_distance",                    abort_distance_,                    0.40);
-  pnh.param("abort_threshold",                   abort_threshold_,                   0.025);
+  pnh.param("abort_distance",                    abort_distance_,                    0.82);
+  pnh.param("abort_threshold",                   abort_threshold_,                   0.03);
   pnh.param("abort_angle",                       abort_angle_,                       5.0*(M_PI/180.0)),
   pnh.param("num_of_retries",                    NUM_OF_RETRIES_,                    5);
   pnh.param("dock_connector_clearance_distance", DOCK_CONNECTOR_CLEARANCE_DISTANCE_, 0.2);
