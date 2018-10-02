@@ -19,8 +19,14 @@ find_package(catkin REQUIRED
     rospy
     std_msgs
     tf
+    dynamic_reconfigure
 )
 find_package(Eigen REQUIRED)
+
+generate_dynamic_reconfigure_options(
+  cfg/FetchControllerGain.cfg
+)
+
 
 catkin_package(
   INCLUDE_DIRS include

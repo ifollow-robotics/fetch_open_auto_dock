@@ -25,6 +25,9 @@
 #include <nav_msgs/Path.h>
 #include <fstream>
 
+#include <fetch_open_auto_dock/FetchControllerGainConfig.h>
+#include <dynamic_reconfigure/server.h>
+
 class BaseController
 {
 public:
@@ -82,6 +85,9 @@ private:
   /*
    * Parameters for backup controller
    */
+  dynamic_reconfigure::Server<fetch_open_auto_dock::FetchControllerGainConfig> *dsrv_;
+  void reconfigureGains(fetch_open_auto_dock::FetchControllerGainConfig& gains, uint32_t);
+
   geometry_msgs::PoseStamped start_;
   bool ready_;
   bool turning_;

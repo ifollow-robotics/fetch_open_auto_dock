@@ -33,20 +33,37 @@ BaseController::BaseController(ros::NodeHandle& nh)
   dock_pub_ = nh.advertise<geometry_msgs::PoseStamped>("/dock_pose/debug", 1);
 
   // TODO(enhancement): these should be loaded from ROS params
-  k1_ = 1;
-  k2_ = 3;
-  min_velocity_ = 0.15;
-  max_velocity_ = 0.15;
-  max_angular_velocity_ = 0.5;
-  beta_ = 0.2;
-  lambda_ = 2.0;
-  dist_ = 0.4;
+  nh.param("k1", k1_, 1.0);
+  nh.param("k2", k2_, 3.0);
+  nh.param("min_velocity", min_velocity_, 0.10);
+  nh.param("max_angular_velocity", max_angular_velocity_, 0.15);
+  nh.param("beta", beta_, 0.2);
+  nh.param("lambda", lambda_, 2.0);
+  nh.param("dist", dist_, 0.4);
   robot_half_length_ = 0.72;
 
   myfile.open ("/home/nuc/fetch.txt");
 
+  dsrv_ = new dynamic_reconfigure::Server<fetch_open_auto_dock::FetchControllerGainConfig>(ros::NodeHandle("~/controller"));
+  dynamic_reconfigure::Server<fetch_open_auto_dock::FetchControllerGainConfig>::CallbackType cb = boost::bind(
+                  &BaseController::reconfigureGains, this, _1, _2);
+  dsrv_->setCallback(cb);
+
   ready_=false; 
 }
+void BaseController::reconfigureGains(fetch_open_auto_dock::FetchControllerGainConfig& gains, uint32_t level){
+	
+  k1_ = gains.k1;
+  k2_ = gains.k2;
+  min_velocity_ = gains.min_velocity;
+  max_velocity_ = gains.max_velocity;
+  max_angular_velocity_ = gains.max_angular_velocity;
+  beta_ = gains.beta ;
+  lambda_ = gains.lambda;
+  dist_ = gains.dist;
+
+}
+
 
 bool BaseController::approach(const geometry_msgs::PoseStamped& target)
 {
