@@ -62,6 +62,8 @@ void BaseController::reconfigureGains(fetch_open_auto_dock::FetchControllerGainC
   lambda_ = gains.lambda;
   dist_ = gains.dist;
 
+  ROS_INFO("changing Param k1 %f k2 %f", k1_, k2_);
+
 }
 
 
@@ -209,6 +211,8 @@ bool BaseController::approach(const geometry_msgs::PoseStamped& target)
 
 bool BaseController::backup(double distance, double rotate_distance)
 {
+
+  ROS_ERROR("BACKUP !!!");
   // If the inputs are invalid then don't backup.
   if (!std::isfinite(distance) ||
       !std::isfinite(rotate_distance))
@@ -313,5 +317,5 @@ void BaseController::stop()
   ready_ = false;
 
   // Reset the approach controller
-  //dist_ = 0.4;
+  dist_ = 0.4;
 }

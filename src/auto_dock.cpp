@@ -39,7 +39,7 @@ AutoDocking::AutoDocking() :
   // Load ros parameters
   ros::NodeHandle pnh("~");
   pnh.param("abort_distance",                    abort_distance_,                    0.82);
-  pnh.param("abort_threshold",                   abort_threshold_,                   0.03);
+  pnh.param("abort_threshold",                   abort_threshold_,                   0.05);
   pnh.param("abort_angle",                       abort_angle_,                       5.0*(M_PI/180.0)),
   pnh.param("num_of_retries",                    NUM_OF_RETRIES_,                    5);
   pnh.param("dock_connector_clearance_distance", DOCK_CONNECTOR_CLEARANCE_DISTANCE_, 0.2);
@@ -94,7 +94,7 @@ void AutoDocking::dockCallback(const fetch_auto_dock_msgs::DockGoalConstPtr& goa
   }
 
   // Object for controlling loop rate.
-  ros::Rate r(50.0);
+  ros::Rate r(15.0);
 
   // Start perception
   perception_.start(goal->dock_pose);
@@ -117,7 +117,7 @@ void AutoDocking::dockCallback(const fetch_auto_dock_msgs::DockGoalConstPtr& goa
 
   // Preorient the robot.
   double dock_yaw = angles::normalize_angle(tf::getYaw(dock_pose_cart_body.pose.orientation));
-  if (!std::isfinite(dock_yaw))
+  /*if (!std::isfinite(dock_yaw))
   {
     //ROS_INFO("Dock yaw is invalid : yaw=%f, normalized_yaw=%f", tf::getYaw(dock_pose_cart_body.pose.orientation), angles::normalize_angle(tf::getYaw(dock_pose_cart_body.pose.orientation)));
     ROS_ERROR_STREAM_NAMED("auto_dock", "Dock yaw is invalid.");
@@ -140,7 +140,7 @@ void AutoDocking::dockCallback(const fetch_auto_dock_msgs::DockGoalConstPtr& goa
       r.sleep();  // Sleep the rate control object.
     }
   }
-
+  */
   // Make sure controller is ready
   controller_.stop();
 
@@ -151,10 +151,10 @@ void AutoDocking::dockCallback(const fetch_auto_dock_msgs::DockGoalConstPtr& goa
     // Update perception
     if (perception_.getPose(feedback.dock_pose))
     {
-      if (aborting_)
+      /*if (aborting_)
       {
         // Backup.
-        executeBackupSequence(r);
+        //executeBackupSequence(r);
 
         // Reset abort flag.
         aborting_ = false;
@@ -178,8 +178,12 @@ void AutoDocking::dockCallback(const fetch_auto_dock_msgs::DockGoalConstPtr& goa
           // Are we on the dock? Check charging timeout.
           checkDockChargingConditions();
         }
-      }
+      }*/
 
+      if (controller_.approach(feedback.dock_pose)){
+		break;
+      }
+      
       // Feedback is mainly for our debugging
       controller_.getCommand(feedback.command);
       dock_.publishFeedback(feedback);
@@ -363,6 +367,7 @@ bool AutoDocking::isApproachBad(double & dock_yaw)
   perception_.getPose(dock_pose_cart_body, "cart_body");
 
   dock_yaw = angles::normalize_angle(tf::getYaw(dock_pose_cart_body.pose.orientation));
+  ROS_INFO("checking approach x_dist : %f y_dist : %f yaw : %f", dock_pose_cart_body.pose.position.x, dock_pose_cart_body.pose.position.y, dock_yaw);
 
   // If we are close to the dock but not quite docked, check other approach parameters.
   if (dock_pose_cart_body.pose.position.x < abort_distance_ &&
