@@ -16,8 +16,8 @@ if __name__ == "__main__":
     rospy.loginfo("Sending dock goal...")
     goal = DockGoal()
     goal.dock_pose.header.frame_id = "cart_body"
-    goal.dock_pose.pose.position.x = 3.1
-    goal.dock_pose.pose.position.y = 0.0
+    goal.dock_pose.pose.position.x = 1.2
+    goal.dock_pose.pose.position.y = 0.25
     goal.dock_pose.pose.orientation.w = 1.0
     goal.dock_pose.pose.orientation.x = 0.0
     goal.dock_pose.pose.orientation.y = 0.0

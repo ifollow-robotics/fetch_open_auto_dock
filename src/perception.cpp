@@ -334,7 +334,7 @@ void DockPerception::callback(const sensor_msgs::LaserScanConstPtr& scan)
       cloud_iter[2] = best->points[i].z;
       ++cloud_iter;
     }
-    ROS_INFO("guess from debug pcl : %f %f", (best->points.front().x + best->points.back().x)/2,  (best->points.front().y + best->points.back().y)/2);
+    //ROS_INFO("guess from debug pcl : %f %f", (best->points.front().x + best->points.back().x)/2,  (best->points.front().y + best->points.back().y)/2);
     debug_points_.publish(cloud);
   }
 
@@ -367,7 +367,7 @@ void DockPerception::callback(const sensor_msgs::LaserScanConstPtr& scan)
 
   // Filter the pose esitmate.
   dock_.pose = dock_pose_filter_->filter(best_pose);
-  ROS_INFO(" filter estimate : %f %f", dock_.pose.position.x, dock_.pose.position.y);
+  //ROS_INFO(" filter estimate : %f %f", dock_.pose.position.x, dock_.pose.position.y);
   dock_stamp_ = scan->header.stamp;
   found_dock_ = true;
 }

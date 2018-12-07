@@ -32,7 +32,7 @@ BaseController::BaseController(ros::NodeHandle& nh)
   cmd_vel_pub_ = nh.advertise<geometry_msgs::Twist>("cmd_vel", 10);
   dock_pub_ = nh.advertise<geometry_msgs::PoseStamped>("/dock_pose/debug", 1);
 
-  // TODO(enhancement): these should be loaded from ROS params
+  //Parameters loading
   nh.param("k1", k1_, 1.0);
   nh.param("k2", k2_, 3.0);
   nh.param("min_velocity", min_velocity_, 0.10);

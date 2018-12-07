@@ -65,6 +65,8 @@ add_dependencies(auto_dock
   fetch_auto_dock_gencpp
   fetch_msgs_gencpp
   power_msgs_gencpp
+  ${CATKIN_EXPORTED_TARGETS}
+  ${${PROJECT_NAME}_EXPORTED_TARGETS}
 )
 
 if (CATKIN_ENABLE_TESTING)
